@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foresight Menu</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050505;
+    --panel: #0c0c0c;
+    --panel-2: #111;
+    --line: rgba(255,255,255,.08);
+    --text: #f5f5f5;
+    --muted: #7a7a7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Inter", system-ui, sans-serif; font-size: 13px;
+    overflow: hidden; user-select: none; -webkit-font-smoothing: antialiased;
+  }
+
+  .hint { position: fixed; bottom: 16px; left: 0; right: 0; text-align: center; color: #3a3a3a; font-size: 11px; letter-spacing: .08em; }
+
+  /* ---------- window ---------- */
+  .menu {
+    position: fixed; left: 50%; top: 50%;
+    width: 640px; height: 430px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px);
+    display: grid; grid-template-columns: 150px 1fr;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    transform: translate(-50%, -50%);
+    animation: open .6s cubic-bezier(.2,.8,.2,1);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .menu.hidden { opacity: 0; transform: translate(-50%, -50%) scale(.96); pointer-events: none; }
+  .menu.moved { transform: none; animation: none; }
+  .menu.moved.hidden { transform: scale(.96); }
+  @keyframes open { from { opacity: 0; transform: translate(-50%, -46%) scale(.96); } }
+
+  /* sidebar */
+  .side { border-right: 1px solid var(--line); padding: 20px 10px; display: flex; flex-direction: column; gap: 4px; cursor: grab; }
+  .side:active { cursor: grabbing; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 0 10px 22px; }
+  .brand svg { width: 22px; height: 22px; flex: none; }
+  .brand svg path { fill: #fff; }
+  .brand span { font-weight: 300; font-size: 10px; letter-spacing: .3em; }
+  .tab {
+    position: relative; display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 9px; color: var(--muted); cursor: pointer;
+    font-weight: 500; transition: color .2s, background .2s;
+  }
+  .tab svg { width: 15px; height: 15px; flex: none; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: #000; background: #fff; }
+  .side .foot { margin-top: auto; padding: 0 12px; color: #444; font-size: 11px; }
+
+  /* content */
+  .content { padding: 20px; overflow-y: auto; }
+  .content::-webkit-scrollbar { width: 0; }
+  .page { display: none; grid-template-columns: 1fr 1fr; gap: 14px; align-content: start; }
+  .page.active { display: grid; animation: page .35s cubic-bezier(.2,.8,.2,1); }
+  @keyframes page { from { opacity: 0; transform: translateY(8px); } }
+
+  .group { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 6px; }
+  .group h3 { font-size: 10px; font-weight: 600; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; }
+  .row label { color: #d4d4d4; }
+
+  /* toggle */
+  .toggle { width: 32px; height: 18px; border-radius: 99px; background: #222; position: relative; cursor: pointer; transition: background .25s; flex: none; }
+  .toggle::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
+    background: #666; transition: transform .25s cubic-bezier(.2,.8,.2,1), background .25s;
+  }
+  .toggle.on { background: #fff; }
+  .toggle.on::after { transform: translateX(14px); background: #000; }
+
+  /* slider */
+  .slider { flex-direction: column; align-items: stretch; gap: 8px; padding: 6px 0 8px; }
+  .slider .top { display: flex; justify-content: space-between; }
+  .slider .val { color: var(--muted); font-variant-numeric: tabular-nums; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px; background: #222; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+  input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: #fff; }
+
+  /* dropdown */
+  .select { position: relative; }
+  .select button, .key, .btn {
+    background: #1a1a1a; border: 1px solid var(--line); color: var(--text); border-radius: 8px;
+    font: 500 12px "Inter", sans-serif; padding: 6px 10px; cursor: pointer; transition: border-color .2s, background .2s;
+  }
+  .select button { min-width: 92px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .select button::after { content: ""; width: 5px; height: 5px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
+  .select.open button::after { transform: rotate(-135deg) translateY(-1px); }
+  .select button:hover, .key:hover, .btn:hover { border-color: rgba(255,255,255,.25); }
+  .options {
+    position: absolute; right: 0; top: calc(100% + 4px); min-width: 100%; z-index: 5;
+    background: #161616; border: 1px solid var(--line); border-radius: 8px; padding: 4px;
+    opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .15s, transform .15s;
+  }
+  .select.open .options { opacity: 1; transform: none; pointer-events: auto; }
+  .options div { padding: 6px 8px; border-radius: 6px; cursor: pointer; color: #bbb; white-space: nowrap; }
+  .options div:hover { background: #222; color: #fff; }
+
+  /* keybind */
+  .key { min-width: 64px; text-align: center; color: var(--muted); }
+  .key.wait { color: #fff; border-color: #fff; animation: blink 1s infinite; }
+  @keyframes blink { 50% { border-color: rgba(255,255,255,.2); } }
+
+  /* configs */
+  .cfg { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; margin: 0 -4px 4px; border-radius: 8px; cursor: pointer; color: #bbb; transition: background .2s; }
+  .cfg:hover { background: #1a1a1a; }
+  .cfg.active { color: #fff; background: #1a1a1a; }
+  .cfg.active::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+  .btns { display: flex; gap: 8px; padding: 8px 0; }
+  .btn { flex: 1; padding: 9px; }
+  .btn.primary { background: #fff; color: #000; border-color: #fff; }
+  .btn.primary:hover { background: #ddd; }
+
+  @media (max-width: 560px) {
+    .menu { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .side { flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); padding: 10px; overflow-x: auto; }
+    .brand, .side .foot { display: none; }
+    .page { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="menu" id="menu">
+    <aside class="side" id="drag">
+      <div class="brand">
+        <svg viewBox="0 0 100 100"><path d="M27 16 H94 L86 29 H37.5 L24 84 H11 Z"/><path d="M40 40 H76 L68 52 H37 Z"/></svg>
+        <span>FORESIGHT</span>
+      </div>
+      <div id="tabs"></div>
+      <div class="foot">CS2 · v1.0</div>
+    </aside>
+    <main class="content" id="content"></main>
+  </div>
+
+  <div class="hint">INSERT — show / hide menu · drag the sidebar to move</div>
+
+<script>
+  // ---- menu layout: edit this to add/remove options ----
+  const icons = {
+    aim: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>',
+    visuals: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    misc: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    config: '<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="#000"/><circle cx="15" cy="12" r="2" fill="#000"/><circle cx="8" cy="18" r="2" fill="#000"/>'
+  };
+
+  const pages = [
+    { id: 'aim', name: 'Aimbot', groups: [
+      { title: 'General', items: [
+        { t: 'toggle', label: 'Enabled', on: true },
+        { t: 'key', label: 'Key', value: 'MOUSE4' },
+        { t: 'slider', label: 'FOV', min: 0, max: 30, value: 6, unit: '°' },
+        { t: 'slider', label: 'Smoothing', min: 1, max: 20, value: 8 },
+      ]},
+      { title: 'Target', items: [
+        { t: 'select', label: 'Hitbox', options: ['Head', 'Neck', 'Chest', 'Nearest'] },
+        { t: 'toggle', label: 'Visible only', on: true },
+        { t: 'toggle', label: 'Team check', on: true },
+        { t: 'toggle', label: 'Draw FOV' },
+      ]},
+    ]},
+    { id: 'visuals', name: 'Visuals', groups: [
+      { title: 'ESP', items: [
+        { t: 'toggle', label: 'Box', on: true },
+        { t: 'toggle', label: 'Name', on: true },
+        { t: 'toggle', label: 'Health bar', on: true },
+        { t: 'toggle', label: 'Weapon' },
+        { t: 'toggle', label: 'Skeleton' },
+      ]},
+      { title: 'World', items: [
+        { t: 'toggle', label: 'Glow' },
+        { t: 'toggle', label: 'Chams' },
+        { t: 'select', label: 'Box style', options: ['Full', 'Corner'] },
+        { t: 'slider', label: 'Max distance', min: 10, max: 200, value: 120, unit: 'm' },
+      ]},
+    ]},
+    { id: 'misc', name: 'Misc', groups: [
+      { title: 'Movement', items: [
+        { t: 'toggle', label: 'Bunny hop' },
+        { t: 'toggle', label: 'Auto strafe' },
+      ]},
+      { title: 'Other', items: [
+        { t: 'toggle', label: 'Radar reveal', on: true },
+        { t: 'toggle', label: 'Hit sound' },
+        { t: 'select', label: 'Sound', options: ['Click', 'Bell', 'Pop'] },
+        { t: 'toggle', label: 'Watermark', on: true },
+      ]},
+    ]},
+    { id: 'config', name: 'Config', groups: [
+      { title: 'Configs', configs: ['Default', 'Legit', 'Closet'] },
+      { title: 'Menu', items: [
+        { t: 'key', label: 'Menu key', value: 'INSERT' },
+        { t: 'slider', label: 'Animation speed', min: 1, max: 10, value: 5 },
+      ]},
+    ]},
+  ];
+
+  // ---- build ----
+  const tabs = document.getElementById('tabs');
+  const content = document.getElementById('content');
+
+  function control(it) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    if (it.t === 'toggle') {
+      row.innerHTML = `<label>${it.label}</label><div class="toggle ${it.on ? 'on' : ''}"></div>`;
+      row.style.cursor = 'pointer';
+      row.onclick = () => row.lastChild.classList.toggle('on');
+    }
+    if (it.t === 'slider') {
+      row.className = 'row slider';
+      row.innerHTML = `<div class="top"><label>${it.label}</label><span class="val"></span></div>
+        <input type="range" min="${it.min}" max="${it.max}" value="${it.value}">`;
+      const input = row.querySelector('input'), val = row.querySelector('.val');
+      const paint = () => {
+        const p = (input.value - it.min) / (it.max - it.min) * 100;
+        input.style.background = `linear-gradient(90deg,#fff ${p}%,#222 ${p}%)`;
+        val.textContent = input.value + (it.unit || '');
+      };
+      input.oninput = paint; paint();
+    }
+    if (it.t === 'select') {
+      row.innerHTML = `<label>${it.label}</label><div class="select"><button>${it.options[0]}</button>
+        <div class="options">${it.options.map(o => `<div>${o}</div>`).join('')}</div></div>`;
+      const sel = row.querySelector('.select');
+      sel.querySelector('button').onclick = e => {
+        e.stopPropagation();
+        document.querySelectorAll('.select.open').forEach(s => s !== sel && s.classList.remove('open'));
+        sel.classList.toggle('open');
+      };
+      sel.querySelectorAll('.options div').forEach(o => o.onclick = () => {
+        sel.querySelector('button').textContent = o.textContent;
+        sel.classList.remove('open');
+      });
+    }
+    if (it.t === 'key') {
+      row.innerHTML = `<label>${it.label}</label><button class="key">${it.value}</button>`;
+      const k = row.querySelector('.key');
+      k.onclick = e => {
+        e.stopPropagation();
+        k.textContent = '...'; k.classList.add('wait');
+        const done = name => { k.textContent = name; k.classList.remove('wait'); removeEventListener('keydown', onKey, true); removeEventListener('mousedown', onMouse, true); };
+        const onKey = ev => { ev.preventDefault(); ev.stopPropagation(); done(ev.key === 'Escape' ? it.value : ev.code.replace(/^Key|^Digit/, '').toUpperCase()); };
+        const onMouse = ev => { if (ev.button > 0) { ev.preventDefault(); done('MOUSE' + (ev.button + 1)); } };
+        setTimeout(() => { addEventListener('keydown', onKey, true); addEventListener('mousedown', onMouse, true); });
+      };
+    }
+    return row;
+  }
+
+  pages.forEach((p, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    tab.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${icons[p.id]}</svg>${p.name}`;
+    tab.onclick = () => {
+      document.querySelectorAll('.tab, .page').forEach(el => el.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('page-' + p.id).classList.add('active');
+    };
+    tabs.appendChild(tab);
+
+    const page = document.createElement('section');
+    page.className = 'page' + (i === 0 ? ' active' : '');
+    page.id = 'page-' + p.id;
+    p.groups.forEach(g => {
+      const box = document.createElement('div');
+      box.className = 'group';
+      box.innerHTML = `<h3>${g.title}</h3>`;
+      if (g.items) g.items.forEach(it => box.appendChild(control(it)));
+      if (g.configs) {
+        g.configs.forEach((c, ci) => {
+          const el = document.createElement('div');
+          el.className = 'cfg' + (ci === 0 ? ' active' : '');
+          el.textContent = c;
+          el.onclick = () => { box.querySelectorAll('.cfg').forEach(x => x.classList.remove('active')); el.classList.add('active'); };
+          box.appendChild(el);
+        });
+        const btns = document.createElement('div');
+        btns.className = 'btns';
+        btns.innerHTML = '<button class="btn">Save</button><button class="btn primary">Load</button>';
+        box.appendChild(btns);
+      }
+      page.appendChild(box);
+    });
+    content.appendChild(page);
+  });
+
+  document.addEventListener('click', () => document.querySelectorAll('.select.open').forEach(s => s.classList.remove('open')));
+
+  // ---- show / hide with INSERT ----
+  const menu = document.getElementById('menu');
+  addEventListener('keydown', e => { if (e.key === 'Insert') menu.classList.toggle('hidden'); });
+
+  // ---- drag by sidebar ----
+  let drag = null;
+  document.getElementById('drag').addEventListener('mousedown', e => {
+    if (e.target.closest('.tab')) return;
+    const r = menu.getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+  });
+  addEventListener('mousemove', e => {
+    if (!drag) return;
+    menu.style.left = (e.clientX - drag.dx) + 'px';
+    menu.style.top = (e.clientY - drag.dy) + 'px';
+    menu.classList.add('moved');
+  });
+  addEventListener('mouseup', () => drag = null);
+</script>
+</body>
+</html>
