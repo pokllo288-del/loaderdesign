@@ -23,11 +23,6 @@
     user-select: none;
     -webkit-font-smoothing: antialiased;
   }
-  body::before {
-    content: ""; position: fixed; inset: 0; pointer-events: none;
-    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.05), transparent 60%);
-  }
-  #bg { position: fixed; inset: 0; }
 
   /* ---------- logo ---------- */
   .mark path { fill: #fff; }
@@ -69,9 +64,8 @@
   #app { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .window {
     width: 360px; max-width: 100%;
-    background: rgba(12,12,12,.85); backdrop-filter: blur(16px);
+    background: var(--panel);
     border: 1px solid var(--line); border-radius: 18px;
-    box-shadow: 0 40px 100px rgba(0,0,0,.8);
     opacity: 0; transform: translateY(24px) scale(.96);
   }
   .ready .window { animation: winIn .9s cubic-bezier(.2,.8,.2,1) forwards; }
@@ -135,8 +129,6 @@
 </style>
 </head>
 <body>
-  <canvas id="bg"></canvas>
-
   <!-- logo, reused below -->
   <template id="logo">
     <svg class="mark" viewBox="0 0 100 100">
@@ -204,31 +196,6 @@
   // load button: does nothing for now
   document.getElementById('load').addEventListener('click', () => {});
 
-  // subtle floating dots
-  const cv = document.getElementById('bg'), ctx = cv.getContext('2d');
-  let W, H, dots = [];
-  function resize() {
-    const r = devicePixelRatio || 1;
-    W = cv.width = innerWidth * r; H = cv.height = innerHeight * r;
-    cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
-    dots = Array.from({ length: 60 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      s: (Math.random() * 1.2 + .4) * r, v: (Math.random() * .25 + .05) * r,
-      a: Math.random() * .35 + .05
-    }));
-  }
-  (function tick() {
-    ctx.clearRect(0, 0, W, H);
-    for (const d of dots) {
-      d.y -= d.v;
-      if (d.y < 0) { d.y = H; d.x = Math.random() * W; }
-      ctx.fillStyle = `rgba(255,255,255,${d.a})`;
-      ctx.beginPath(); ctx.arc(d.x, d.y, d.s, 0, Math.PI * 2); ctx.fill();
-    }
-    requestAnimationFrame(tick);
-  })();
-  addEventListener('resize', resize);
-  resize();
 </script>
 </body>
 </html>
