@@ -114,7 +114,7 @@
     border-radius: 9px; background: rgba(255,255,255,.1);
     transition: transform .35s cubic-bezier(.2,.8,.2,1);
   }
-  .mode[data-mode="kernel"] .pill { transform: translateX(100%); }
+  .mode[data-pos="1"] .pill { transform: translateX(100%); }
   .mode button {
     position: relative; z-index: 1; border: 0; background: transparent; cursor: pointer;
     padding: 10px; color: var(--muted); font: 500 12px "Inter", sans-serif; letter-spacing: .12em;
@@ -122,6 +122,8 @@
   }
   .mode button:hover { color: #bdbdbd; }
   .mode button.on { color: var(--text); }
+  .game .n, .game .e { transition: opacity .2s ease, transform .2s ease; }
+  .game.swap .n, .game.swap .e { opacity: 0; transform: translateY(4px); }
 
   .load {
     position: relative; overflow: hidden; width: 100%;
@@ -177,22 +179,27 @@
       </div>
 
       <div class="body">
-        <div class="game s" style="--i:2">
+        <div class="mode s" style="--i:2" id="game" data-pos="0">
+          <span class="pill"></span>
+          <button type="button" data-value="cs2" class="on">CS2</button>
+          <button type="button" data-value="minecraft">MINECRAFT</button>
+        </div>
+        <div class="game s" style="--i:3" id="gameCard">
           <div>
-            <div class="n">Counter-Strike 2</div>
+            <div class="n" id="gameName">Counter-Strike 2</div>
             <div class="e">Expires in 30 days</div>
           </div>
           <div class="status"><i></i>ONLINE</div>
         </div>
-        <div class="mode s" style="--i:3" id="mode" data-mode="usermode">
+        <div class="mode s" style="--i:4" id="mode" data-pos="0">
           <span class="pill"></span>
           <button type="button" data-value="usermode" class="on">USERMODE</button>
           <button type="button" data-value="kernel">KERNEL</button>
         </div>
-        <button class="load s" style="--i:4" id="load" type="button">LOAD</button>
+        <button class="load s" style="--i:5" id="load" type="button">LOAD</button>
       </div>
 
-      <div class="foot s" style="--i:5">v1.0</div>
+      <div class="foot s" style="--i:6">v1.0</div>
     </div>
   </div>
 
@@ -216,14 +223,33 @@
     document.body.classList.add('ready');
   }, 4000);
 
-  // usermode / kernel switch
+  // two-option switches
+  function makeSwitch(el, onChange) {
+    const btns = [...el.querySelectorAll('button')];
+    btns.forEach((b, i) => b.addEventListener('click', () => {
+      el.dataset.pos = i;
+      btns.forEach(x => x.classList.toggle('on', x === b));
+      onChange(b.dataset.value);
+    }));
+  }
+
+  // game switch: 'cs2' or 'minecraft'
+  let game = 'cs2';
+  const gameNames = { cs2: 'Counter-Strike 2', minecraft: 'Minecraft' };
+  const card = document.getElementById('gameCard');
+  makeSwitch(document.getElementById('game'), v => {
+    if (v === game) return;
+    game = v;
+    card.classList.add('swap');
+    setTimeout(() => {
+      document.getElementById('gameName').textContent = gameNames[game];
+      card.classList.remove('swap');
+    }, 200);
+  });
+
+  // mode switch: 'usermode' or 'kernel'
   let mode = 'usermode';
-  const modeEl = document.getElementById('mode');
-  modeEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-    mode = b.dataset.value;
-    modeEl.dataset.mode = mode;
-    modeEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-  }));
+  makeSwitch(document.getElementById('mode'), v => { mode = v; });
 
   // load button: does nothing for now
   document.getElementById('load').addEventListener('click', () => {});
