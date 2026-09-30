@@ -63,7 +63,7 @@
   /* ---------- loader ---------- */
   #app { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .window {
-    width: 360px; max-width: 100%;
+    width: 400px; max-width: 100%;
     background: var(--panel);
     border: 1px solid var(--line); border-radius: 18px;
     opacity: 0; transform: translateY(24px) scale(.96);
@@ -121,12 +121,14 @@
   }
   .mode button:hover { color: #bdbdbd; }
   .mode button.on { color: var(--text); }
-  .game .n { transition: opacity .2s ease, transform .2s ease; }
-  .game.swap .n { opacity: 0; transform: translateY(4px); }
-  .collapse { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .35s cubic-bezier(.2,.8,.2,1), margin-top .35s cubic-bezier(.2,.8,.2,1); }
-  .collapse > div { min-height: 0; overflow: hidden; transition: opacity .25s ease; }
-  .collapse.hidden { grid-template-rows: 0fr; margin-top: -14px; }
-  .collapse.hidden > div { opacity: 0; }
+
+  .updates { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); }
+  .updates .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .updates h2 { font-size: 11px; font-weight: 500; letter-spacing: .2em; color: var(--text); }
+  .updates .when { font-size: 11px; color: var(--muted); }
+  .updates ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .updates li { position: relative; padding-left: 16px; font-size: 12px; color: #b5b5b5; line-height: 1.5; }
+  .updates li::before { content: ""; position: absolute; left: 0; top: .75em; width: 8px; height: 1px; background: var(--muted); }
 
   .load {
     position: relative; overflow: hidden; width: 100%;
@@ -182,25 +184,25 @@
       </div>
 
       <div class="body">
-        <div class="mode s" style="--i:2" id="game" data-pos="0">
-          <span class="pill"></span>
-          <button type="button" data-value="cs2" class="on">CS2</button>
-          <button type="button" data-value="minecraft">MINECRAFT</button>
-        </div>
-        <div class="game s" style="--i:3" id="gameCard">
-          <div>
-            <div class="n" id="gameName">Counter-Strike 2</div>
-          </div>
+        <div class="game s" style="--i:2">
+          <div class="n">Counter-Strike 2</div>
           <div class="status"><i></i>ONLINE</div>
         </div>
-        <div class="collapse s" style="--i:4" id="modeWrap">
-          <div>
-            <div class="mode" id="mode" data-pos="0">
-              <span class="pill"></span>
-              <button type="button" data-value="usermode" class="on">USERMODE</button>
-              <button type="button" data-value="kernel">KERNEL</button>
-            </div>
+        <div class="updates s" style="--i:3">
+          <div class="row">
+            <h2>UPDATES</h2>
+            <span class="when">Last update 10 days ago</span>
           </div>
+          <ul>
+            <li>Updated for the latest CS2 patch</li>
+            <li>Improved kernel mode stability</li>
+            <li>Faster loading</li>
+          </ul>
+        </div>
+        <div class="mode s" style="--i:4" id="mode" data-pos="0">
+          <span class="pill"></span>
+          <button type="button" data-value="usermode" class="on">USERMODE</button>
+          <button type="button" data-value="kernel">KERNEL</button>
         </div>
         <button class="load s" style="--i:5" id="load" type="button">LOAD</button>
       </div>
@@ -239,26 +241,9 @@
     }));
   }
 
-  // mode switch: 'usermode' or 'kernel' (kernel is CS2 only)
+  // mode switch: 'usermode' or 'kernel'
   let mode = 'usermode';
-  const modeEl = document.getElementById('mode');
-  makeSwitch(modeEl, v => { mode = v; });
-
-  // game switch: 'cs2' or 'minecraft'
-  let game = 'cs2';
-  const gameNames = { cs2: 'Counter-Strike 2', minecraft: 'Minecraft' };
-  const card = document.getElementById('gameCard');
-  makeSwitch(document.getElementById('game'), v => {
-    if (v === game) return;
-    game = v;
-    if (game === 'minecraft') modeEl.querySelector('[data-value="usermode"]').click();
-    document.getElementById('modeWrap').classList.toggle('hidden', game === 'minecraft');
-    card.classList.add('swap');
-    setTimeout(() => {
-      document.getElementById('gameName').textContent = gameNames[game];
-      card.classList.remove('swap');
-    }, 200);
-  });
+  makeSwitch(document.getElementById('mode'), v => { mode = v; });
 
   // load button: does nothing for now
   document.getElementById('load').addEventListener('click', () => {});
