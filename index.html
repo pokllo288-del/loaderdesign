@@ -96,7 +96,6 @@
   }
   .game:hover { border-color: rgba(255,255,255,.18); }
   .game .n { font-weight: 500; font-size: 14px; }
-  .game .e { font-size: 12px; color: var(--muted); margin-top: 3px; }
   .status { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #d4d4d4; letter-spacing: .08em; }
   .status i { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: pulse 2s infinite; }
   @keyframes pulse {
@@ -122,8 +121,8 @@
   }
   .mode button:hover { color: #bdbdbd; }
   .mode button.on { color: var(--text); }
-  .game .n, .game .e { transition: opacity .2s ease, transform .2s ease; }
-  .game.swap .n, .game.swap .e { opacity: 0; transform: translateY(4px); }
+  .game .n { transition: opacity .2s ease, transform .2s ease; }
+  .game.swap .n { opacity: 0; transform: translateY(4px); }
 
   .load {
     position: relative; overflow: hidden; width: 100%;
@@ -187,7 +186,6 @@
         <div class="game s" style="--i:3" id="gameCard">
           <div>
             <div class="n" id="gameName">Counter-Strike 2</div>
-            <div class="e">Expires in 30 days</div>
           </div>
           <div class="status"><i></i>ONLINE</div>
         </div>
